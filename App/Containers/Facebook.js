@@ -5,12 +5,21 @@ import {
   Alert,
   TouchableOpacity,
   View,
-  TextInput
+  TextInput,
+  Image,
+  AsyncStorage
 } from "react-native";
 import { connect } from "react-redux";
 import { NavigationActions } from "react-navigation";
+import ImagePicker from "react-native-image-picker";
+import FastImage from "react-native-fast-image";
+import InputScrollView from "react-native-input-scroll-view";
+
 // Add Actions - replace 'Your' with whatever your reducer is called :)
 // import YourActions from '../Redux/YourRedux'
+import FacebookActions from "../Redux/FacebookRedux";
+import loadingActions from "../Redux/LoadingScreenRedux";
+
 import FBSDK, { LoginManager } from "react-native-fbsdk";
 
 const { LoginButton, AccessToken, GraphRequest, GraphRequestManager } = FBSDK;
@@ -20,77 +29,229 @@ import Button from "../Components/Button";
 import Infomation from "../Components/Infomation";
 // Styles
 import styles from "./Styles/FacebookStyle";
-import { Images, Colors, Metrics } from "../Themes";
+import { Images, Colors, Metrics, Fonts } from "../Themes";
 
 class Facebook extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      content: "",
+      image: "",
+      visibleModal: false
+    };
     this.logout = this.logout.bind(this);
-    this.scrollEnd = this.scrollEnd.bind(this);
+    this.upLoadImage = this.upLoadImage.bind(this);
+    this.onChange = this.onChange.bind(this);
+    this.renderImage = this.renderImage.bind(this);
+    this.goBack = this.goBack.bind(this);
+    this.renderModal = this.renderModal.bind(this);
+    this.openModal = this.openModal.bind(this);
+    this.handlePostfb = this.handlePostfb.bind(this);
+    this.goToHistory = this.goToHistory.bind(this);
   }
+
+  componentDidMount = () => {
+    AccessToken.getCurrentAccessToken().then(res => {
+      this.props.dispatch(
+        FacebookActions.getProfileRequest(res.accessToken.toString())
+      );
+      this.props.dispatch(loadingActions.runLoadingScreen(true));
+    });
+  };
 
   logout() {
     LoginManager.logOut();
     this.props.dispatch(NavigationActions.back());
+    AsyncStorage.removeItem("login");
   }
 
-  scrollEnd(e){
-    console.log(e);
-    this.input.scrollToEnd({animated: true});
+  goToHistory(){
+    this.props.dispatch(FacebookActions.getListHistoryRequest())
+    this.props.dispatch(loadingActions.runLoadingScreen(true));
+  }
+
+  goBack() {
+    this.props.dispatch(NavigationActions.back());
+  }
+
+  onChange(e) {
+    this.setState({
+      content: e
+    });
+  }
+
+  openModal() {
+    this.setState({
+      visibleModal: !this.state.visibleModal
+    });
+  }
+
+  upLoadImage() {
+    ImagePicker.showImagePicker(response => {
+      console.log("Response = ", response);
+
+      if (response.didCancel) {
+        console.log("User cancelled image picker");
+      } else if (response.error) {
+        console.log("ImagePicker Error: ", response.error);
+      } else if (response.customButton) {
+        console.log("User tapped custom button: ", response.customButton);
+      } else {
+        let source = { uri: response.uri };
+
+        // You can also display the image using data:
+        // let source = { uri: 'data:image/jpeg;base64,' + response.data };
+
+        this.setState({
+          image: source
+        });
+      }
+    });
+  }
+
+  handlePostfb() {
+    const { image, content } = this.state;
+    AccessToken.getCurrentAccessToken()
+      .then(res => {
+        let data = {};
+        if (image === "") {
+          data = {
+            token: res.accessToken.toString(),
+            caption: content
+          };
+        } else {
+          data = {
+            token: res.accessToken.toString(),
+            caption: content,
+            uri: image.uri
+          };
+        }
+        return data;
+      })
+      .then(res => {
+        this.props.dispatch(FacebookActions.postFbRequest(res));
+      });
+  }
+
+  renderModal() {
+    return (
+      <View style={styles.modal}>
+        <TouchableOpacity style={styles.modalTopItem}  onPress={this.goToHistory} >
+          <Text style={{ fontSize: Fonts.size.small }}>History</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.modalBottomItem} onPress={this.logout}>
+          <Text style={{ fontSize: Fonts.size.small }}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  renderImage() {
+    const { image } = this.state;
+    if (image === "") {
+      return (
+        <TouchableOpacity
+          style={{
+            height: 80,
+            width: 80,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "yellow",
+            marginHorizontal: 10
+          }}
+          onPress={this.upLoadImage}
+        >
+          <Image source={Images.camera} style={{ height: 30, width: 30 }} />
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity onPress={this.upLoadImage}>
+          <FastImage
+            source={image}
+            style={{
+              height: 80,
+              width: 80,
+              borderRadius: 10,
+              marginHorizontal: 10
+            }}
+          />
+        </TouchableOpacity>
+      );
+    }
   }
 
   render() {
+    const { visibleModal } = this.state;
+    const { profile } = this.props;
+    console.log(profile);
     return (
       <ScrollView contentContainerStyle={styles.container}>
         <Navbar
           color={Colors.facebook}
           leftIcon={Images.leftArrow}
           rightIcon={Images.setting}
+          rightFunction={this.openModal}
+          leftFunction={this.goBack}
         />
-        <Infomation />
-        <View>
-          <ScrollView
-            contentContainerStyle={{
-              height: 200,
-              width: Metrics.width,
-              borderWidth: 0.5,
-              borderColor: "grey"
-            }}
-            ref={input => this.input =input}
-          >
+        <Infomation
+          name={profile!== undefined ? profile.name : ""}
+          ava={
+            profile.name !== undefined
+              ? { uri: profile.ava.data.url }
+              : Images.avatarDefault
+          }
+        />
+        {visibleModal && this.renderModal()}
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <View style={{ borderWidth: 0.4, borderColor: "#BDBDBD" }}>
             <TextInput
               placeholder="What do you mean?"
               style={{
-                minHeight: 30,
+                minHeight: 60,
+                maxHeight: 160,
                 width: Metrics.width,
+                borderBottomWidth: 0.4,
+                borderColor: "#BDBDBD"
               }}
-              onKeyPress={this.scrollEnd}
+              value={this.state.content}
+              onChangeText={this.onChange}
+              placeholderTextColor="#BDBDBD"
               multiline
               autoFocus={false}
               underlineColorAndroid={Colors.transparent}
             />
-          </ScrollView>
-          <View
-            style={{
-              height: 40,
-              backgroundColor: "blue",
-              width: Metrics.width
-            }}
+            <View
+              style={{
+                height: 100,
+                width: Metrics.width,
+                justifyContent: "center"
+              }}
+            >
+              {this.renderImage()}
+            </View>
+          </View>
+          <Text style={{ marginTop: 20, color: "red" }}>message</Text>
+          <Button
+            onPress={this.handlePostfb}
+            customStyle={{ marginTop: 10 }}
+            label="Post"
           />
+          {/* <TouchableOpacity
+            onPress={this.logout}
+            style={{ height: 40, width: 60, backgroundColor: "red" }}
+          /> */}
         </View>
-        <Button />
-        <TouchableOpacity
-          onPress={this.logout}
-          style={{ height: 40, width: 60, backgroundColor: "red" }}
-        />
       </ScrollView>
     );
   }
 }
 
 const mapStateToProps = state => {
-  return {};
+  return {
+    profile: state.facebook.profile
+  };
 };
 
 const mapDispatchToProps = dispatch => {

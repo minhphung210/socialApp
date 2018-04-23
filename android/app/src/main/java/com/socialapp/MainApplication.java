@@ -7,6 +7,7 @@ import com.facebook.FacebookSdk;
 import com.facebook.reactnative.androidsdk.FBSDKPackage;
 import com.facebook.appevents.AppEventsLogger;
 
+import com.imagepicker.ImagePickerPackage;
 import com.facebook.react.ReactApplication;
 import com.dylanvann.fastimage.FastImageViewPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
@@ -39,6 +40,7 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
             new FastImageViewPackage(),
             new VectorIconsPackage(),
+            new ImagePickerPackage(),
             new FBSDKPackage(mCallbackManager),
             new ReactNativeConfigPackage()
       );
