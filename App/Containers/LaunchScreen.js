@@ -1,5 +1,12 @@
 import React, { Component } from "react";
-import { ScrollView, Text, Image, View, TouchableOpacity, AsyncStorage } from "react-native";
+import {
+  ScrollView,
+  Text,
+  Image,
+  View,
+  TouchableOpacity,
+  AsyncStorage
+} from "react-native";
 import { Images, Colors } from "../Themes";
 import { connect } from "react-redux";
 import FBSDK, { LoginManager } from "react-native-fbsdk";
@@ -12,19 +19,23 @@ import styles from "./Styles/LaunchScreenStyles";
 class LaunchScreen extends Component {
   constructor() {
     super();
-    this.state={
-      login:false
-    }
+    this.state = {
+      login: false
+    };
     this.loginFacebook = this.loginFacebook.bind(this);
     this.getToken = this.getToken.bind(this);
   }
 
   componentDidMount = async () => {
-    const login = await AsyncStorage.getItem("login")
-    if(login ==="true"){
+    const login = await AsyncStorage.getItem("login");
+    if (login === "true") {
       this.setState({
-        login:true
-      })
+        login: true
+      });
+    } else {
+      this.setState({
+        login: false
+      });
     }
   };
 
@@ -36,21 +47,23 @@ class LaunchScreen extends Component {
 
   loginFacebook() {
     // LoginManager.logOut();
-    if(!this.state.login){
+    if (!this.state.login) {
       LoginManager.logInWithReadPermissions(["public_profile"])
-      .then(async result => {
-        if (result.isCancelled) {
-          alert("Login cancelled");
-        } else {
-          const token = await this.getToken();
-          AsyncStorage.setItem("login","true")
-        }
-      })
-      .catch(err => {
-        alert("Login fail with error: " + err);
-      });
+        .then(async result => {
+          if (result.isCancelled) {
+            alert("Login cancelled");
+          } else {
+            const token = await this.getToken();
+            AsyncStorage.setItem("login", "true");
+          }
+        })
+        .catch(err => {
+          alert("Login fail with error: " + err);
+        });
     } else {
-      this.props.dispatch(NavigationActions.navigate({ routeName: "Facebook" }));
+      this.props.dispatch(
+        NavigationActions.navigate({ routeName: "Facebook" })
+      );
     }
   }
 
