@@ -1,10 +1,12 @@
 import React, { Component } from "react";
 import { View, Text, FlatList } from "react-native";
 import { connect } from "react-redux";
+import moment from "moment";
 // Add Actions - replace 'Your' with whatever your reducer is called :)
 // import YourActions from '../Redux/YourRedux'
 import { NavigationActions } from "react-navigation";
 import Navbar from "../Components/Navbar";
+
 
 // Styles
 import styles from "./Styles/HistoryStyle";
@@ -45,7 +47,7 @@ class History extends Component {
         }}
       >
         <Text>ID: {e.item.id}</Text>
-        <Text>Time: {e.item.time}</Text>
+        <Text>Time: {moment.utc(e.item.time).local().toString()}</Text>
         <Text>Content:{e.item.content}</Text>
       </View>
     );

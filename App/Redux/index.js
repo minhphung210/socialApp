@@ -6,7 +6,8 @@ import rootSaga from '../Sagas/'
 export const reducers = combineReducers({
   nav: require('./NavigationRedux').reducer,
   facebook: require('./FacebookRedux').reducer,
-  loadingScreen: require('./LoadingScreenRedux').reducer
+  loadingScreen: require('./LoadingScreenRedux').reducer,
+  google: require("./GoogleRedux").reducer
 })
 
 export default () => {

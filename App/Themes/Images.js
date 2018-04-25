@@ -5,7 +5,9 @@ const images = {
   logout: require("../Images/logout.png"),
   setting: require("../Images/setting.png"),
   camera: require("../Images/photo-camera.png"),
-  history: require("../Images/clock.png")
+  history: require("../Images/clock.png"),
+  logo: require("../Images/socialLogo.png"),
+  close: require("../Images/close.png")
 }
 
 export default images

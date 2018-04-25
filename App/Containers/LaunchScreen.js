@@ -6,18 +6,17 @@ import {
   View,
   TouchableOpacity,
   AsyncStorage,
-  Alert,
-  NativeModules
+  Alert
 } from "react-native";
 import { Images, Colors } from "../Themes";
 import { connect } from "react-redux";
 import FBSDK, { LoginManager } from "react-native-fbsdk";
 const { LoginButton, AccessToken } = FBSDK;
 import { NavigationActions } from "react-navigation";
-const { RNGoogleSignin } = NativeModules;
 
 import { GoogleSignin } from "react-native-google-signin";
 
+import googleActions from "../Redux/GoogleRedux";
 // Styles
 import Button from "../Components/Button";
 import styles from "./Styles/LaunchScreenStyles";
@@ -26,7 +25,6 @@ class LaunchScreen extends Component {
   constructor() {
     super();
     this.state = {
-      login: false
     };
     this.loginFacebook = this.loginFacebook.bind(this);
     this.getToken = this.getToken.bind(this);
@@ -47,19 +45,6 @@ class LaunchScreen extends Component {
     });
   };
 
-  componentDidMount = async () => {
-    const login = await AsyncStorage.getItem("login");
-    if (login === "true") {
-      this.setState({
-        login: true
-      });
-    } else {
-      this.setState({
-        login: false
-      });
-    }
-  };
-
   getToken = async () => {
     const token = await AccessToken.getCurrentAccessToken();
     this.props.dispatch(NavigationActions.navigate({ routeName: "Facebook" }));
@@ -69,15 +54,7 @@ class LaunchScreen extends Component {
   loginGoogle() {
     GoogleSignin.signIn()
       .then(user => {
-        // RNGoogleSignin.getAccessToken(user)
-        //   .then(token => {
-        //     console.log(token);
-        //   })
-        //   .catch(err => {
-        //     console.log(err);
-        //   })
-        //   .done();
-        console.log(user);
+        this.props.dispatch(googleActions.getProfileGoogle(user));
         this.props.dispatch(
           NavigationActions.navigate({ routeName: "Googlemail" })
         );
@@ -90,29 +67,33 @@ class LaunchScreen extends Component {
 
   loginFacebook() {
     // LoginManager.logOut();
-    if (!this.state.login) {
-      LoginManager.logInWithReadPermissions(["public_profile"])
-        .then(async result => {
-          if (result.isCancelled) {
-            alert("Login cancelled");
-          } else {
-            const token = await this.getToken();
-            AsyncStorage.setItem("login", "true");
-          }
-        })
-        .catch(err => {
-          alert("Login fail with error: " + err);
-        });
-    } else {
-      this.props.dispatch(
-        NavigationActions.navigate({ routeName: "Facebook" })
-      );
-    }
+    LoginManager.logInWithReadPermissions(["public_profile"])
+      .then(async result => {
+        if (result.isCancelled) {
+          alert("Login cancelled");
+        } else {
+          const token = await this.getToken();
+        }
+      })
+      .catch(err => {
+        alert("Login fail with error: " + err);
+      });
   }
 
   render() {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          backgroundColor: Colors.background,
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <Image
+          source={Images.logo}
+          style={{ height: 200, width: 240, marginBottom: 100 }}
+        />
         <Button label="Post to Facebook" onPress={this.loginFacebook} />
         <Button
           customStyle={{ marginTop: 20, backgroundColor: Colors.error }}

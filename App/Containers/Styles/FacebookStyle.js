@@ -3,7 +3,8 @@ import { Colors, Metrics } from "../../Themes/";
 
 export default StyleSheet.create({
   container: {
-    alignItems: "center"
+    alignItems: "center",
+    flex:1
   },
   modal: {
     height: 60,

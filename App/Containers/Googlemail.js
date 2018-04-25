@@ -7,16 +7,20 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
-  NativeModules
+  Image
 } from "react-native";
 import { connect } from "react-redux";
 import { NavigationActions } from "react-navigation";
-import {GoogleSignin} from 'react-native-google-signin';
-const { RNGoogleSignin } = NativeModules;
+import ImagePicker from "react-native-image-picker";
+import FastImage from "react-native-fast-image";
+import { GoogleSignin } from "react-native-google-signin";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
+import { checkContent } from "../Services/Validate/ValidateSendEmail";
 // Add Actions - replace 'Your' with whatever your reducer is called :)
 // import YourActions from '../Redux/YourRedux'
+import googleActions from "../Redux/GoogleRedux";
+import loadingActions from "../Redux/LoadingScreenRedux";
 
 import Navbar from "../Components/Navbar";
 import Button from "../Components/Button";
@@ -32,7 +36,9 @@ class Googlemail extends Component {
       title: "",
       receiver: "",
       listReceiver: [],
-      content: ""
+      content: "",
+      password: "",
+      image: ""
     };
     this.goBack = this.goBack.bind(this);
     this.logout = this.logout.bind(this);
@@ -42,11 +48,12 @@ class Googlemail extends Component {
     this.onChangeReceiver = this.onChangeReceiver.bind(this);
     this.keyExtractor = this.keyExtractor.bind(this);
     this.renderItem = this.renderItem.bind(this);
+    this.removeItem = this.removeItem.bind(this);
+    this.sendEmail = this.sendEmail.bind(this);
+    this.onChangePassword = this.onChangePassword.bind(this);
+    this.renderImage = this.renderImage.bind(this);
+    this.upLoadImage = this.upLoadImage.bind(this);
   }
-
-  // componentDidMount = () => {
-
-  // };
 
   goBack() {
     this.props.dispatch(NavigationActions.back());
@@ -65,6 +72,12 @@ class Googlemail extends Component {
   onChangeTitle(e) {
     this.setState({
       title: e
+    });
+  }
+
+  onChangePassword(e) {
+    this.setState({
+      password: e
     });
   }
 
@@ -92,24 +105,150 @@ class Googlemail extends Component {
 
   onContentSizeChange(e) {
     if (e.nativeEvent.contentSize.height > 199) {
-      const height =
-        e.nativeEvent.contentSize.height - this.state.heightOfInput;
+      const height = e.nativeEvent.contentSize.height - 200;
       this.input.scrollTo({ x: 0, y: height, animated: true });
     }
   }
 
   keyExtractor = (item, index) => index;
 
+  removeItem(e) {
+    const { listReceiver } = this.state;
+    listReceiver.splice(e, 1);
+    this.setState({
+      listReceiver
+    });
+  }
+
+  sendEmail() {
+    const { title, content, listReceiver, password, image } = this.state;
+    const { profile } = this.props;
+    let newArr = "";
+    listReceiver.forEach(e => {
+      newArr= newArr + e.email +","
+    });
+    const validate = {
+      title,
+      newArr,
+      password,
+      content
+    };
+    console.log(image);
+    const mess = checkContent(validate);
+    if (mess === "") {
+      const data = {
+        subject: title,
+        img: image.uri,
+        receivers: newArr,
+        content,
+        pass: password,
+        user: profile.email
+      };
+      this.props.dispatch(loadingActions.runLoadingScreen(true));
+      this.props.dispatch(googleActions.sendEmailRequest(data));
+    } else {
+      this.props.dispatch(googleActions.sendEmailReceive(mess));
+    }
+  }
+
+  upLoadImage() {
+    ImagePicker.showImagePicker(response => {
+      console.log("Response = ", response);
+
+      if (response.didCancel) {
+        console.log("User cancelled image picker");
+      } else if (response.error) {
+        console.log("ImagePicker Error: ", response.error);
+      } else if (response.customButton) {
+        console.log("User tapped custom button: ", response.customButton);
+      } else {
+        let source = { uri: response.uri };
+
+        // You can also display the image using data:
+        // let source = { uri: 'data:image/jpeg;base64,' + response.data };
+
+        this.setState({
+          image: source
+        });
+      }
+    });
+  }
+
+  renderImage() {
+    const { image } = this.state;
+    if (image === "") {
+      return (
+        <TouchableOpacity
+          style={{
+            height: 80,
+            width: 80,
+            borderRadius: 10,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "yellow",
+            marginHorizontal: 10
+          }}
+          onPress={this.upLoadImage}
+        >
+          <Image source={Images.camera} style={{ height: 30, width: 30 }} />
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity onPress={this.upLoadImage}>
+          <FastImage
+            source={image}
+            style={{
+              height: 80,
+              width: 80,
+              borderRadius: 10,
+              marginHorizontal: 10
+            }}
+          />
+        </TouchableOpacity>
+      );
+    }
+  }
+
   renderItem(e) {
     return (
-      <View style={{ height: 20 }}>
-        <Text>{e.item.email}</Text>
+      <View
+        style={{
+          width: 150,
+          margin: 2,
+          height: 32,
+          flexDirection: "row",
+          borderRadius: 10,
+          backgroundColor: Colors.steel
+        }}
+      >
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Text numberOfLines={1} ellipsizeMode="tail">
+            {e.item.email}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={{
+            height: 32,
+            width: 32,
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+          onPress={() => this.removeItem(e.index)}
+        >
+          <Image
+            resizeMode="contain"
+            source={Images.close}
+            style={{ height: 10, width: 10 }}
+          />
+        </TouchableOpacity>
       </View>
     );
   }
 
   render() {
-    const { listReceiver, receiver, content, title } = this.state;
+    const { listReceiver, receiver, content, title, password } = this.state;
+    const { profile, mess } = this.props;
     return (
       <View style={styles.container}>
         <Navbar
@@ -119,7 +258,14 @@ class Googlemail extends Component {
           rightIcon={Images.logout}
           rightFunction={this.logout}
         />
-        <Infomation />
+        <Infomation
+          name={profile.email === undefined ? "" : profile.email}
+          ava={
+            profile.email === undefined
+              ? Images.avatarDefault
+              : { uri: profile.photo }
+          }
+        />
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="never"
           keyboardDismissMode={"on-drag"}
@@ -136,6 +282,8 @@ class Googlemail extends Component {
               borderBottomWidth: 0.4,
               borderColor: "#BDBDBD"
             }}
+            value={title}
+            onChangeText={this.onChangeTitle}
           />
           <TextInput
             underlineColorAndroid={Colors.transparent}
@@ -150,13 +298,16 @@ class Googlemail extends Component {
               borderColor: "#BDBDBD"
             }}
           />
-          <Text>{listReceiver.length}</Text>
           <FlatList
             data={listReceiver}
             keyExtractor={this.keyExtractor}
             renderItem={this.renderItem}
-            horizontal
             extraData={this.state}
+            contentContainerStyle={{
+              paddingHorizontal: 5,
+              alignItems: "flex-start"
+            }}
+            numColumns={2}
           />
           <ScrollView
             ref={scrollView => (this.input = scrollView)}
@@ -174,9 +325,33 @@ class Googlemail extends Component {
               placeholder="Content"
               multiline
               onContentSizeChange={this.onContentSizeChange}
+              value={content}
+              onChangeText={this.onChangeContent}
             />
           </ScrollView>
-          <Button label="Send email" />
+          {this.renderImage()}
+          <TextInput
+            underlineColorAndroid={Colors.transparent}
+            placeholderTextColor="#BDBDBD"
+            placeholder="Password"
+            secureTextEntry
+            style={{
+              height: 40,
+              width: Metrics.width - 20,
+              borderBottomWidth: 0.4,
+              borderColor: "#BDBDBD"
+            }}
+            value={password}
+            onChangeText={this.onChangePassword}
+          />
+          <Text style={{ marginVertical: 20, color: Colors.error }}>
+            {mess}
+          </Text>
+          <Button
+            customStyle={{ marginBottom: 30, backgroundColor: Colors.error }}
+            label="Send email"
+            onPress={this.sendEmail}
+          />
         </KeyboardAwareScrollView>
       </View>
     );
@@ -184,7 +359,10 @@ class Googlemail extends Component {
 }
 
 const mapStateToProps = state => {
-  return {};
+  return {
+    profile: state.google.profile,
+    mess: state.google.mess
+  };
 };
 
 const mapDispatchToProps = dispatch => {

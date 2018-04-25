@@ -20,9 +20,14 @@ import loadingActiosn from "../Redux/LoadingScreenRedux";
 export function* postFbSaga(api, action) {
   try {
     const res = yield call(api, action.data);
-    console.log(res);
+    if(res.status === 200){
+      yield put(FacebookActions.postFbReceive("succes"))
+    } else {
+      yield put(FacebookActions.postFbReceive(`error ${res.status}`))
+    }
+    
   } catch (err) {
-    console.log(err.response);
+    yield put(FacebookActions.postFbReceive(err.message))
   } finally {
     yield put(loadingActiosn.runLoadingScreen(false));
   }

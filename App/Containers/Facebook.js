@@ -14,6 +14,7 @@ import { NavigationActions } from "react-navigation";
 import ImagePicker from "react-native-image-picker";
 import FastImage from "react-native-fast-image";
 import InputScrollView from "react-native-input-scroll-view";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 // Add Actions - replace 'Your' with whatever your reducer is called :)
 // import YourActions from '../Redux/YourRedux'
@@ -48,6 +49,7 @@ class Facebook extends Component {
     this.openModal = this.openModal.bind(this);
     this.handlePostfb = this.handlePostfb.bind(this);
     this.goToHistory = this.goToHistory.bind(this);
+    this.onContentSizeChange = this.onContentSizeChange.bind(this);
   }
 
   componentDidMount = () => {
@@ -62,11 +64,10 @@ class Facebook extends Component {
   logout() {
     LoginManager.logOut();
     this.props.dispatch(NavigationActions.back());
-    AsyncStorage.removeItem("login");
   }
 
-  goToHistory(){
-    this.props.dispatch(FacebookActions.getListHistoryRequest())
+  goToHistory() {
+    this.props.dispatch(FacebookActions.getListHistoryRequest());
     this.props.dispatch(loadingActions.runLoadingScreen(true));
   }
 
@@ -109,6 +110,14 @@ class Facebook extends Component {
     });
   }
 
+  onContentSizeChange(e) {
+    if (e.nativeEvent.contentSize.height > 160) {
+      const height =
+        e.nativeEvent.contentSize.height - 160;
+      this.input.scrollTo({ x: 0, y: height, animated: true });
+    }
+  }
+
   handlePostfb() {
     const { image, content } = this.state;
     AccessToken.getCurrentAccessToken()
@@ -129,14 +138,24 @@ class Facebook extends Component {
         return data;
       })
       .then(res => {
-        this.props.dispatch(FacebookActions.postFbRequest(res));
+        if (content === "") {
+          this.props.dispatch(
+            FacebookActions.postFbReceive("Please enter text")
+          );
+        } else {
+          this.props.dispatch(FacebookActions.postFbRequest(res));
+          this.props.dispatch(loadingActions.runLoadingScreen(true));
+        }
       });
   }
 
   renderModal() {
     return (
       <View style={styles.modal}>
-        <TouchableOpacity style={styles.modalTopItem}  onPress={this.goToHistory} >
+        <TouchableOpacity
+          style={styles.modalTopItem}
+          onPress={this.goToHistory}
+        >
           <Text style={{ fontSize: Fonts.size.small }}>History</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.modalBottomItem} onPress={this.logout}>
@@ -184,7 +203,7 @@ class Facebook extends Component {
 
   render() {
     const { visibleModal } = this.state;
-    const { profile } = this.props;
+    const { profile, postFbMess } = this.props;
     console.log(profile);
     return (
       <ScrollView contentContainerStyle={styles.container}>
@@ -196,7 +215,7 @@ class Facebook extends Component {
           leftFunction={this.goBack}
         />
         <Infomation
-          name={profile!== undefined ? profile.name : ""}
+          name={profile !== undefined ? profile.name : ""}
           ava={
             profile.name !== undefined
               ? { uri: profile.ava.data.url }
@@ -204,24 +223,34 @@ class Facebook extends Component {
           }
         />
         {visibleModal && this.renderModal()}
-        <View style={{ flex: 1, alignItems: "center" }}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="never"
+          keyboardDismissMode={"on-drag"}
+          enableResetScrollToCoords={false}
+          contentContainerStyle={{flex:1, alignItems: "center" }}
+        >
           <View style={{ borderWidth: 0.4, borderColor: "#BDBDBD" }}>
-            <TextInput
-              placeholder="What do you mean?"
+            <ScrollView
+              ref={scrollView => (this.input = scrollView)}
               style={{
-                minHeight: 60,
                 maxHeight: 160,
                 width: Metrics.width,
                 borderBottomWidth: 0.4,
                 borderColor: "#BDBDBD"
               }}
-              value={this.state.content}
-              onChangeText={this.onChange}
-              placeholderTextColor="#BDBDBD"
-              multiline
-              autoFocus={false}
-              underlineColorAndroid={Colors.transparent}
-            />
+            >
+              <TextInput
+                style={{ flex: 1 }}
+                placeholder="What do you mean?"
+                value={this.state.content}
+                onChangeText={this.onChange}
+                placeholderTextColor="#BDBDBD"
+                multiline
+                autoFocus={false}
+                onContentSizeChange={this.onContentSizeChange}
+                underlineColorAndroid={Colors.transparent}
+              />
+            </ScrollView>
             <View
               style={{
                 height: 100,
@@ -232,7 +261,7 @@ class Facebook extends Component {
               {this.renderImage()}
             </View>
           </View>
-          <Text style={{ marginTop: 20, color: "red" }}>message</Text>
+          <Text style={{ marginTop: 20, color: "red" }}>{postFbMess}</Text>
           <Button
             onPress={this.handlePostfb}
             customStyle={{ marginTop: 10 }}
@@ -242,7 +271,7 @@ class Facebook extends Component {
             onPress={this.logout}
             style={{ height: 40, width: 60, backgroundColor: "red" }}
           /> */}
-        </View>
+        </KeyboardAwareScrollView>
       </ScrollView>
     );
   }
@@ -250,7 +279,8 @@ class Facebook extends Component {
 
 const mapStateToProps = state => {
   return {
-    profile: state.facebook.profile
+    profile: state.facebook.profile,
+    postFbMess: state.facebook.postFbMess
   };
 };
 
