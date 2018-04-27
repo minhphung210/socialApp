@@ -17,7 +17,9 @@ export const sendEmailApi = data => {
     formData.append("user", data.user);
   
     const api = {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { "Content-Type": "multipart/form-data",
+                // "Content-Transfer-Encoding":"QUOTED-PRINTABLE"
+              },
       method: "post",
       url: `https://facebookgmailapi.herokuapp.com/sendmail`,
       // url:"http://localhost:6969/sendmail",

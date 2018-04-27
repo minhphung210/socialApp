@@ -38,7 +38,8 @@ class Googlemail extends Component {
       listReceiver: [],
       content: "",
       password: "",
-      image: ""
+      image: "",
+      email: ""
     };
     this.goBack = this.goBack.bind(this);
     this.logout = this.logout.bind(this);
@@ -53,6 +54,7 @@ class Googlemail extends Component {
     this.onChangePassword = this.onChangePassword.bind(this);
     this.renderImage = this.renderImage.bind(this);
     this.upLoadImage = this.upLoadImage.bind(this);
+    this.onChangeEmail = this.onChangeEmail.bind(this);
   }
 
   goBack() {
@@ -60,13 +62,13 @@ class Googlemail extends Component {
   }
 
   logout() {
-    GoogleSignin.signOut()
-      .then(() => {
-        this.goBack();
-      })
-      .catch(err => {
-        Alert.alert(err);
-      });
+    // GoogleSignin.signOut()
+    //   .then(() => {
+    //     this.goBack();
+    //   })
+    //   .catch(err => {
+    //     Alert.alert(err);
+    //   });
   }
 
   onChangeTitle(e) {
@@ -78,6 +80,12 @@ class Googlemail extends Component {
   onChangePassword(e) {
     this.setState({
       password: e
+    });
+  }
+
+  onChangeEmail(e) {
+    this.setState({
+      email: e
     });
   }
 
@@ -121,11 +129,11 @@ class Googlemail extends Component {
   }
 
   sendEmail() {
-    const { title, content, listReceiver, password, image } = this.state;
-    const { profile } = this.props;
+    const { title, content, listReceiver, password, image, email } = this.state;
+    // const { profile } = this.props;
     let newArr = "";
     listReceiver.forEach(e => {
-      newArr= newArr + e.email +","
+      newArr = newArr + e.email + ",";
     });
     const validate = {
       title,
@@ -142,7 +150,7 @@ class Googlemail extends Component {
         receivers: newArr,
         content,
         pass: password,
-        user: profile.email
+        user: email
       };
       this.props.dispatch(loadingActions.runLoadingScreen(true));
       this.props.dispatch(googleActions.sendEmailRequest(data));
@@ -247,7 +255,7 @@ class Googlemail extends Component {
   }
 
   render() {
-    const { listReceiver, receiver, content, title, password } = this.state;
+    const { listReceiver, receiver, content, title, password, email } = this.state;
     const { profile, mess } = this.props;
     return (
       <View style={styles.container}>
@@ -258,20 +266,33 @@ class Googlemail extends Component {
           rightIcon={Images.logout}
           rightFunction={this.logout}
         />
-        <Infomation
+        {/* <Infomation
           name={profile.email === undefined ? "" : profile.email}
           ava={
             profile.email === undefined
               ? Images.avatarDefault
               : { uri: profile.photo }
           }
-        />
+        /> */}
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="never"
           keyboardDismissMode={"on-drag"}
           enableResetScrollToCoords={false}
           contentContainerStyle={{ alignItems: "center" }}
         >
+          <TextInput
+            underlineColorAndroid={Colors.transparent}
+            placeholderTextColor="#BDBDBD"
+            placeholder="Your email"
+            style={{
+              height: 40,
+              width: Metrics.width - 20,
+              borderBottomWidth: 0.4,
+              borderColor: "#BDBDBD"
+            }}
+            value={email}
+            onChangeText={this.onChangeEmail}
+          />
           <TextInput
             underlineColorAndroid={Colors.transparent}
             placeholderTextColor="#BDBDBD"

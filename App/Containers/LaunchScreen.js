@@ -24,8 +24,7 @@ import styles from "./Styles/LaunchScreenStyles";
 class LaunchScreen extends Component {
   constructor() {
     super();
-    this.state = {
-    };
+    this.state = {};
     this.loginFacebook = this.loginFacebook.bind(this);
     this.getToken = this.getToken.bind(this);
     this.loginGoogle = this.loginGoogle.bind(this);
@@ -52,17 +51,20 @@ class LaunchScreen extends Component {
   };
 
   loginGoogle() {
-    GoogleSignin.signIn()
-      .then(user => {
-        this.props.dispatch(googleActions.getProfileGoogle(user));
-        this.props.dispatch(
-          NavigationActions.navigate({ routeName: "Googlemail" })
-        );
-      })
-      .catch(err => {
-        console.log("WRONG SIGNIN", err);
-      })
-      .done();
+    // GoogleSignin.signIn()
+    //   .then(user => {
+    //     this.props.dispatch(googleActions.getProfileGoogle(user));
+    //     this.props.dispatch(
+    //       NavigationActions.navigate({ routeName: "Googlemail" })
+    //     );
+    //   })
+    //   .catch(err => {
+    //     console.log("WRONG SIGNIN", err);
+    //   })
+    //   .done();
+    this.props.dispatch(
+      NavigationActions.navigate({ routeName: "Googlemail" })
+    );
   }
 
   loginFacebook() {
