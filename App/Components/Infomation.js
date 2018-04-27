@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import FastImage from "react-native-fast-image";
 import { Images, Colors, Fonts } from "../Themes";
 import styles from "./Styles/InfomationStyle";
 
@@ -47,7 +46,7 @@ export default class Infomation extends Component {
     return (
       <View style={[styles.container, customStyle]}>
         <View>
-          <FastImage source={ava=== null? Images.coverImage: ava} style={styles.avatar} />
+          <Image source={ava=== null? Images.coverImage: ava} style={styles.avatar} />
         </View>
         <View style={styles.rightContainer}>
           <View style={styles.wrapperName}>

@@ -12,7 +12,6 @@ import {
 import { connect } from "react-redux";
 import { NavigationActions } from "react-navigation";
 import ImagePicker from "react-native-image-picker";
-import FastImage from "react-native-fast-image";
 import InputScrollView from "react-native-input-scroll-view";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
@@ -187,7 +186,7 @@ class Facebook extends Component {
     } else {
       return (
         <TouchableOpacity onPress={this.upLoadImage}>
-          <FastImage
+          <Image
             source={image}
             style={{
               height: 80,
