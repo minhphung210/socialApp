@@ -14,7 +14,7 @@ import FBSDK, { LoginManager } from "react-native-fbsdk";
 const { LoginButton, AccessToken } = FBSDK;
 import { NavigationActions } from "react-navigation";
 
-import { GoogleSignin } from "react-native-google-signin";
+// import { GoogleSignin } from "react-native-google-signin";
 
 import googleActions from "../Redux/GoogleRedux";
 // Styles
@@ -31,17 +31,17 @@ class LaunchScreen extends Component {
   }
 
   componentWillMount = () => {
-    GoogleSignin.hasPlayServices({ autoResolve: true })
-      .then(() => {
-        // play services are available. can now configure library
-      })
-      .catch(err => {
-        Alert.alert("Play services error", err.code, err.message);
-      });
-    GoogleSignin.configure({
-      webClientId:
-        "378919532961-sippafc4fmsj99snjpbhr7m6r02bn5c9.apps.googleusercontent.com"
-    });
+    // GoogleSignin.hasPlayServices({ autoResolve: true })
+    //   .then(() => {
+    //     // play services are available. can now configure library
+    //   })
+    //   .catch(err => {
+    //     Alert.alert("Play services error", err.code, err.message);
+    //   });
+    // GoogleSignin.configure({
+    //   webClientId:
+    //     "378919532961-sippafc4fmsj99snjpbhr7m6r02bn5c9.apps.googleusercontent.com"
+    // });
   };
 
   getToken = async () => {

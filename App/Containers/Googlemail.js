@@ -12,7 +12,7 @@ import {
 import { connect } from "react-redux";
 import { NavigationActions } from "react-navigation";
 import ImagePicker from "react-native-image-picker";
-import { GoogleSignin } from "react-native-google-signin";
+// import { GoogleSignin } from "react-native-google-signin";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import { checkContent } from "../Services/Validate/ValidateSendEmail";
