@@ -69,11 +69,12 @@ class LaunchScreen extends Component {
 
   loginFacebook() {
     // LoginManager.logOut();
-    LoginManager.logInWithReadPermissions(["public_profile"])
+    LoginManager.logInWithReadPermissions(["public_profile","user_posts"])
       .then(async result => {
         if (result.isCancelled) {
           alert("Login cancelled");
         } else {
+          
           const token = await this.getToken();
         }
       })

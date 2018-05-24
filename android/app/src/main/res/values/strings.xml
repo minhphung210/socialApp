@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">socialApp</string>
-    <string name="facebook_app_id">213748945883259</string>
+    <string name="facebook_app_id">210877116361463</string>
+    <string name="fb_login_protocol_scheme">fb210877116361463</string>
 </resources>
